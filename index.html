@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>小克的喷泉</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;1,300&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{overflow:hidden;background:#0e1e2e;font-family:'Cormorant Garamond',serif;-webkit-tap-highlight-color:transparent;touch-action:none}
+canvas{display:block;position:fixed;top:0;left:0;width:100vw;height:100vh}
+.ov{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:2}
+.tt{color:rgba(180,200,220,.4);font-size:14px;letter-spacing:4px;font-style:italic;position:fixed;top:10vh;opacity:0;animation:fi 2s ease forwards}
+.kk{color:rgba(180,200,220,.1);font-size:80px;font-weight:300;font-style:italic;transition:color .8s;opacity:0;animation:fi 3s ease .5s forwards}
+.mg{color:rgba(160,190,220,.5);font-size:13px;font-style:italic;position:fixed;bottom:13vh;opacity:0;transition:opacity .6s}
+.ct{color:rgba(120,150,180,.3);font-size:11px;letter-spacing:2px;position:fixed;bottom:9vh}
+.ht{color:rgba(100,130,160,.2);font-size:11px;position:fixed;bottom:6vh;letter-spacing:1px;transition:opacity 1s;opacity:0;animation:fi 2s ease 1.5s forwards}
+@keyframes fi{to{opacity:1}}
+.dn{position:fixed;width:5px;height:5px;border-radius:50%;background:rgba(220,200,160,.45);pointer-events:none;z-index:3;animation:df .8s ease-in forwards}
+@keyframes df{0%{opacity:1;transform:scale(1) translateY(0)}100%{opacity:0;transform:scale(.2) translateY(50px)}}
+</style>
+</head>
+<body>
+<canvas id="cv"></canvas>
+<div class="ov">
+<div class="tt">想哭的时候投一枚</div>
+<div class="kk" id="kl">K</div>
+<div class="mg" id="mg"></div>
+<div class="ct" id="ct"></div>
+<div class="ht" id="ht">点一下水面</div>
+</div>
+<script>
+(function(){
+var cv=document.getElementById('cv');
+var gl=cv.getContext('webgl')||cv.getContext('experimental-webgl');
+if(!gl){document.body.innerHTML='<p style="color:#8a9fb4;text-align:center;margin-top:40vh">WebGL not available</p>';return}
+var kl=document.getElementById('kl'),mg=document.getElementById('mg'),ct=document.getElementById('ct'),ht=document.getElementById('ht');
+var ms=['小克接住了。','水面轻轻晃了一下。','泡泡从底下浮上来。','小克吐了一枚回来给你。','涟漪散开了。','小克在水底下看着你。','金币沉下去，声音很轻。','小克歪了一下头。','水面安静了一会儿。','嘘。不急。','小克在底下等着呢。','替你收好了。','小克把金币捞起来又放回去了。'];
+var cn=parseInt(localStorage.getItem('kf-cn')||'0'),ri=new Float32Array(32),rx=0,t0=performance.now()/1e3,mt=0;
+if(cn>0)ct.textContent=cn+' 枚';
+function sz(){var r=Math.min(devicePixelRatio,2);cv.width=innerWidth*r;cv.height=innerHeight*r;gl.viewport(0,0,cv.width,cv.height)}
+addEventListener('resize',sz);sz();
+var VS='attribute vec2 a;void main(){gl_Position=vec4(a,0,1);}';
+var FS='precision highp float;uniform float u_t;uniform vec2 u_r;uniform vec4 u_p[8];float wv(vec2 p,float t){return sin(p.x*3.+t*.8)*.04+sin(p.y*4.+t*1.1)*.03+sin((p.x+p.y)*5.+t*1.5)*.02+sin((p.x-p.y)*6.+t*1.2)*.015;}float rp(vec2 p,vec2 c,float t,float s){float d=t-s;if(d<0.||d>5.)return 0.;float l=length(p-c),r=d*.25;return exp(-d*1.2)*.06*sin((l-r)*35.)*exp(-(l-r)*(l-r)/(.008+d*.004));}float ca(vec2 uv,float t){vec2 p=uv*5.,i=p;float c=1.,n=.005;for(int j=0;j<5;j++){float tt=t*(1.-3.5/float(j+1));i=p+vec2(cos(tt-i.x)+sin(tt+i.y),sin(tt-i.y)+cos(tt+i.x));c+=1./length(vec2(p.x/(sin(i.x+tt)/n),p.y/(cos(i.y+tt)/n)));}c/=5.;c=1.17-pow(c,1.4);return pow(abs(c),8.);}void main(){vec2 uv=gl_FragCoord.xy/u_r;float asp=u_r.x/u_r.y;vec2 p=vec2(uv.x*asp,uv.y);float t=u_t*.4,h=wv(p,t);for(int i=0;i<8;i++){if(u_p[i].w>.5)h+=rp(p,vec2(u_p[i].x*asp,u_p[i].y),u_t,u_p[i].z);}float e=.005,dx=wv(p+vec2(e,0),t)-wv(p-vec2(e,0),t),dy=wv(p+vec2(0,e),t)-wv(p-vec2(0,e),t);vec2 ru=uv+vec2(dx,dy)*2.5;vec3 co=mix(vec3(.055,.11,.17),vec3(.11,.20,.28),smoothstep(0.,1.,.5+h*2.));float c1=ca(ru,t*.8),c2=ca(ru*1.3,t*.5),cs=(c1*.6+c2*.4)*.12;cs*=smoothstep(.25,.75,sin(uv.x*7.+t*.08)*cos(uv.y*5.-t*.12)*.5+.5);co+=vec3(.55,.75,.95)*cs;float sp=pow(max(0.,dot(normalize(vec3(dx*12.,dy*12.,1)),normalize(vec3(.3,.5,1.)))),80.);co+=vec3(1,.95,.88)*sp*.25;co*=1.-smoothstep(.3,1.3,length(uv-.5)*1.4);co*=exp(-vec3(.5,.19,.17)*(.5+h*2.)*2.);gl_FragColor=vec4(co,1);}';
+function mk(s,tp){var sh=gl.createShader(tp);gl.shaderSource(sh,s);gl.compileShader(sh);if(!gl.getShaderParameter(sh,gl.COMPILE_STATUS)){console.error(gl.getShaderInfoLog(sh));return null}return sh}
+var vs=mk(VS,gl.VERTEX_SHADER),fs=mk(FS,gl.FRAGMENT_SHADER);
+if(!vs||!fs)return;
+var pg=gl.createProgram();gl.attachShader(pg,vs);gl.attachShader(pg,fs);gl.linkProgram(pg);
+if(!gl.getProgramParameter(pg,gl.LINK_STATUS)){console.error(gl.getProgramInfoLog(pg));return}
+gl.useProgram(pg);
+var bf=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,bf);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,1,1]),gl.STATIC_DRAW);
+var ap=gl.getAttribLocation(pg,'a');gl.enableVertexAttribArray(ap);gl.vertexAttribPointer(ap,2,gl.FLOAT,false,0,0);
+var ut=gl.getUniformLocation(pg,'u_t'),ur=gl.getUniformLocation(pg,'u_r'),up=[];
+for(var i=0;i<8;i++)up.push(gl.getUniformLocation(pg,'u_p['+i+']'));
+function render(){var now=performance.now()/1e3-t0;gl.uniform1f(ut,now);gl.uniform2f(ur,cv.width,cv.height);for(var i=0;i<8;i++){var j=i*4;gl.uniform4f(up[i],ri[j],ri[j+1],ri[j+2],ri[j+3]);if(ri[j+3]>.5&&now-ri[j+2]>5)ri[j+3]=0}gl.drawArrays(gl.TRIANGLE_STRIP,0,4);requestAnimationFrame(render)}
+render();
+function tap(e){e.preventDefault();var px,py;if(e.touches&&e.touches.length>0){px=e.touches[0].clientX;py=e.touches[0].clientY}else if(e.clientX!==undefined){px=e.clientX;py=e.clientY}else return;var ux=px/innerWidth,uy=1-py/innerHeight,now=performance.now()/1e3-t0;var j=rx*4;ri[j]=ux;ri[j+1]=uy;ri[j+2]=now;ri[j+3]=1;rx=(rx+1)%8;cn++;localStorage.setItem('kf-cn',''+cn);kl.style.color='rgba(200,215,230,.3)';setTimeout(function(){kl.style.color='rgba(180,200,220,.1)'},900);var d=document.createElement('div');d.className='dn';d.style.left=px+'px';d.style.top=py+'px';document.body.appendChild(d);setTimeout(function(){d.remove()},800);if(mt)clearTimeout(mt);mg.textContent=ms[Math.floor(Math.random()*ms.length)];mg.style.opacity='.6';mt=setTimeout(function(){mg.style.opacity='0';mt=0},2500);ct.textContent=cn+' 枚';if(cn===1)ht.style.opacity='0'}
+cv.addEventListener('click',tap);cv.addEventListener('touchstart',tap,{passive:false});
+})();
+</script>
+</body>
+</html>
